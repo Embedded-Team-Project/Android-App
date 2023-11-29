@@ -17,7 +17,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 
@@ -63,9 +62,21 @@ public class MainActivity extends AppCompatActivity {
                         Location.distanceBetween(location.getLatitude(), location.getLongitude(),
                                 selectedBusStop.getLatitude(), selectedBusStop.getLongitude(), results);
                         float distanceInMeters = results[0];
+//                        float distanceInMeters = 1;
                         if (distanceInMeters < 300) {
+                            System.out.println("test®");
                             // 사용자가 정류장과 300m 이내에 있으면 모달창을 띄웁니다.
-                            runOnUiThread(() -> showArrivalDialog());
+                            String url = "http://172.20.10.2:8000";
+//                            String url = "https://service.windmeal-server.top/store/3";
+                            runOnUiThread(() -> {
+                                        try {
+                                            String responseResult = new OkHttpHandler().execute(url).get();
+                                            showArrivalDialog(responseResult);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                            );
                         }
                     }
                 }
@@ -105,11 +116,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showArrivalDialog() {
+    private void showArrivalDialog(String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle("알림");
-        builder.setMessage("지금!");
-        builder.setPositiveButton("확인", (dialog, which) -> {
+        builder.setMessage(message);
+        builder.setPositiveButton(message, (dialog, which) -> {
             // 위치 업데이트 중단
             fusedLocationClient.removeLocationUpdates(locationCallback);
             dialog.dismiss();
@@ -132,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
     // onRequestPermissionsResult 메서드를 오버라이드하여 권한 요청 결과 처리
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -146,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
         // 여기에 실제 데이터를 로드하는 로직을 구현합니다.
         // 예시를 위해 목 데이터를 생성합니다.
         ArrayList<BusStop> list = new ArrayList<>();
-        list.add(new BusStop("우리집",  37.546834915756, 127.15046447134));
+        list.add(new BusStop("우리집", 37.546834915756, 127.15046447134));
         list.add(new BusStop("가천대", 37.449692542638, 127.12700692477));
         // ... 추가 정류장 데이터를 여기에 넣습니다.
         return list;
@@ -158,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
         private double latitude;
         private double longitude;
 
-        public BusStop(String name,  double latitude, double longitude) {
+        public BusStop(String name, double latitude, double longitude) {
             this.name = name;
 
             this.latitude = latitude;
